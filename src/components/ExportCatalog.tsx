@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { Download, FileText, File, Settings, ArrowLeft, RotateCcw, Check, AlertCircle } from 'lucide-react';
 import { CatalogData } from '../types';
 import { exportApi } from '../services/api';
-
+// @ts-ignore: no types for html2pdf.js
+import html2pdf from 'html2pdf.js';
+import CatalogPreview from './CatalogPreview';
+import { Margin, usePDF, Resolution } from 'react-to-pdf';
 interface ExportCatalogProps {
   catalogData: CatalogData;
   onBackToEditor: () => void;
@@ -10,12 +13,25 @@ interface ExportCatalogProps {
 }
 
 const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEditor, onStartOver }) => {
-  const [selectedFormat, setSelectedFormat] = useState<'pdf' | 'docx'>('pdf');
+  const [selectedFormat, setSelectedFormat] = useState<'pdf'>('pdf');
   const [quality, setQuality] = useState<'standard' | 'high' | 'print'>('high');
   const [isExporting, setIsExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+      const filename = `${catalogData.generatedContent.title
+        .replace(/[^a-zA-Z0-9]/g, '-')
+        .toLowerCase()}`;
 
+ // Set up PDF export for a single long portrait page
+ const { toPDF, targetRef } = usePDF({
+   filename: `${filename}.pdf`,
+   page: { 
+     margin: Margin.NONE,
+     format: [200, 3000], // 800pt wide, 3000pt tall (portrait, very long)
+     orientation: 'portrait'
+   },
+   resolution: Resolution.HIGH,
+ });
   const formatOptions = [
     {
       id: 'pdf',
@@ -24,14 +40,6 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
       icon: FileText,
       size: '2.4 MB',
       features: ['Vector graphics', 'Print-ready', 'Universal compatibility']
-    },
-    {
-      id: 'docx',
-      name: 'Word Document',
-      description: 'Editable DOCX format for further customization',
-      icon: File,
-      size: '1.8 MB',
-      features: ['Fully editable', 'Template structure', 'Easy collaboration']
     }
   ];
 
@@ -44,40 +52,11 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
   const handleExport = async () => {
     setIsExporting(true);
     setError(null);
-    
     try {
-      let blob: Blob;
       const filename = `${catalogData.generatedContent.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
-
-      if (selectedFormat === 'pdf') {
-        blob = await exportApi.exportPDF(catalogData, quality, {
-          includeImages: true,
-          includeSpecs: true,
-          includeFeatures: true,
-          includeBenefits: true
-        });
-      } else {
-        blob = await exportApi.exportDOCX(catalogData, {
-          includeImages: true,
-          includeSpecs: true,
-          includeFeatures: true,
-          includeBenefits: true
-        });
-      }
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${filename}.${selectedFormat}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      setExportComplete(true);
+      const previewElement = document.getElementById('catalog-export-preview');
+    toPDF()
     } catch (err) {
-      console.error('Export error:', err);
       setError(err instanceof Error ? err.message : 'Export failed');
     } finally {
       setIsExporting(false);
@@ -156,7 +135,9 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 mb-3">Export Your Catalog</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-3">
+              Export Your Catalog
+            </h2>
             <p className="text-lg text-slate-600">
               Choose your preferred format and quality settings
             </p>
@@ -165,7 +146,9 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
           <div className="space-y-8">
             {/* Format Selection */}
             <div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-4">Export Format</h3>
+              <h3 className="text-xl font-semibold text-slate-900 mb-4">
+                Export Format
+              </h3>
               <div className="grid md:grid-cols-2 gap-4">
                 {formatOptions.map(format => {
                   const Icon = format.icon;
@@ -180,19 +163,32 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
                       }`}
                     >
                       <div className="flex items-start space-x-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                          selectedFormat === format.id ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'
-                        }`}>
+                        <div
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            selectedFormat === format.id
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
                           <Icon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold text-slate-900 mb-1">{format.name}</h4>
-                          <p className="text-sm text-slate-600 mb-3">{format.description}</p>
+                          <h4 className="font-semibold text-slate-900 mb-1">
+                            {format.name}
+                          </h4>
+                          <p className="text-sm text-slate-600 mb-3">
+                            {format.description}
+                          </p>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-500">~{format.size}</span>
+                            <span className="text-xs text-slate-500">
+                              ~{format.size}
+                            </span>
                             <div className="flex flex-wrap gap-1">
                               {format.features.map(feature => (
-                                <span key={feature} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                                <span
+                                  key={feature}
+                                  className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full"
+                                >
                                   {feature}
                                 </span>
                               ))}
@@ -209,7 +205,9 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
             {/* Quality Settings - Only for PDF */}
             {selectedFormat === 'pdf' && (
               <div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-4">Quality Settings</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-4">
+                  Quality Settings
+                </h3>
                 <div className="space-y-3">
                   {qualityOptions.map(option => (
                     <button
@@ -223,11 +221,17 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="font-medium text-slate-900">{option.name}</h4>
-                          <p className="text-sm text-slate-600">{option.description}</p>
+                          <h4 className="font-medium text-slate-900">
+                            {option.name}
+                          </h4>
+                          <p className="text-sm text-slate-600">
+                            {option.description}
+                          </p>
                         </div>
                         <div className="text-right">
-                          <span className="text-sm text-slate-500">~{option.size}</span>
+                          <span className="text-sm text-slate-500">
+                            ~{option.size}
+                          </span>
                         </div>
                       </div>
                     </button>
@@ -245,21 +249,29 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-slate-600">Product:</span>
-                  <p className="font-medium text-slate-900">{catalogData.generatedContent.title}</p>
+                  <p className="font-medium text-slate-900">
+                    {catalogData.generatedContent.title}
+                  </p>
                 </div>
                 <div>
                   <span className="text-slate-600">Format:</span>
-                  <p className="font-medium text-slate-900">{formatOptions.find(f => f.id === selectedFormat)?.name}</p>
+                  <p className="font-medium text-slate-900">
+                    {formatOptions.find(f => f.id === selectedFormat)?.name}
+                  </p>
                 </div>
                 {selectedFormat === 'pdf' && (
                   <div>
                     <span className="text-slate-600">Quality:</span>
-                    <p className="font-medium text-slate-900">{qualityOptions.find(q => q.id === quality)?.name}</p>
+                    <p className="font-medium text-slate-900">
+                      {qualityOptions.find(q => q.id === quality)?.name}
+                    </p>
                   </div>
                 )}
                 <div>
                   <span className="text-slate-600">Images:</span>
-                  <p className="font-medium text-slate-900">{catalogData.images.length} images included</p>
+                  <p className="font-medium text-slate-900">
+                    {catalogData.images.length} images included
+                  </p>
                 </div>
               </div>
             </div>
@@ -280,9 +292,10 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
                 className={`
                   flex items-center space-x-2 px-8 py-4 text-base font-semibold rounded-2xl
                   transition-all duration-200 transform
-                  ${isExporting
-                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:scale-105 shadow-lg hover:shadow-xl'
+                  ${
+                    isExporting
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:scale-105 shadow-lg hover:shadow-xl'
                   }
                 `}
               >
@@ -300,6 +313,19 @@ const ExportCatalog: React.FC<ExportCatalogProps> = ({ catalogData, onBackToEdit
               </button>
             </div>
           </div>
+        </div>
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 0,
+          width: '800px',
+        }}
+        id="catalog-export-preview"
+      >
+        <div className="prose font-sans text-base" ref={targetRef}>
+          <CatalogPreview catalogData={catalogData} mode="desktop"  />
         </div>
       </div>
     </div>

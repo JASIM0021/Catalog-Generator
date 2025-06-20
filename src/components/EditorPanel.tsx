@@ -29,28 +29,79 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
     onContentChange('features', newFeatures);
   };
 
+
   const removeFeature = (index: number) => {
     const newFeatures = catalogData.generatedContent.features.filter((_, i) => i !== index);
     onContentChange('features', newFeatures);
   };
 
+
+    const addSpecification = () => {
+      const newSpecs = { ...(catalogData.generatedContent.specifications || {}) };
+      let newKey = '';
+      let i = 1;
+      while (newSpecs.hasOwnProperty(`New Spec ${i}`)) i++;
+      newKey = `New Spec ${i}`;
+      newSpecs[newKey] = '';
+      onContentChange('specifications', newSpecs);
+    };
+
+    const handleSpecificationChange = (oldKey: string, newKey: string, newValue: string) => {
+      const specs = { ...(catalogData.generatedContent.specifications || {}) };
+      if (oldKey !== newKey) {
+        delete specs[oldKey];
+      }
+      specs[newKey] = newValue;
+      onContentChange('specifications', specs);
+    };
+
+    const removeSpecification = (key: string) => {
+      const specs = { ...(catalogData.generatedContent.specifications || {}) };
+      delete specs[key];
+      onContentChange('specifications', specs);
+    };
+  
+   const handlewhychoseUs = (index: number, value: string) => {
+     const newFeatures = [...catalogData.generatedContent.benefits];
+     newFeatures[index] = value;
+     onContentChange('benefits', newFeatures);
+   };
+
+   const addWhyChoseUs = () => {
+     const newFeatures = [...catalogData.generatedContent.benefits, ''];
+     onContentChange('benefits', newFeatures);
+   };
+
+   const removeWhyChoseUs = (index: number) => {
+     const newFeatures = catalogData.generatedContent.benefits.filter(
+       (_, i) => i !== index,
+     );
+     onContentChange('benefits', newFeatures);
+   };
+  
+
+
   const renderContentPanel = () => (
     <div className="p-6 space-y-6">
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-3">Product Title</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-3">
+          Product Title
+        </label>
         <input
           type="text"
           value={catalogData.generatedContent.title}
-          onChange={(e) => onContentChange('title', e.target.value)}
+          onChange={e => onContentChange('title', e.target.value)}
           className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-3">Description</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-3">
+          Description
+        </label>
         <textarea
           value={catalogData.generatedContent.description}
-          onChange={(e) => onContentChange('description', e.target.value)}
+          onChange={e => onContentChange('description', e.target.value)}
           rows={6}
           className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
         />
@@ -58,7 +109,9 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <label className="block text-sm font-semibold text-slate-700">Key Features</label>
+          <label className="block text-sm font-semibold text-slate-700">
+            Key Features
+          </label>
           <button
             onClick={addFeature}
             className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
@@ -74,7 +127,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
               <input
                 type="text"
                 value={feature}
-                onChange={(e) => handleFeatureChange(index, e.target.value)}
+                onChange={e => handleFeatureChange(index, e.target.value)}
                 className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter feature..."
               />
@@ -87,6 +140,101 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             </div>
           ))}
         </div>
+      </div>
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-sm font-semibold text-slate-700">
+            Specifications
+          </label>
+          <button
+            onClick={addSpecification}
+            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add</span>
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {Object.entries(
+            catalogData.generatedContent.specifications || {},
+          ).map(([key, value], index) => (
+            <div key={key + index} className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={key}
+                onChange={e =>
+                  handleSpecificationChange(key, e.target.value, value)
+                }
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg"
+                placeholder="Key"
+              />
+              <input
+                type="text"
+                value={value}
+                onChange={e =>
+                  handleSpecificationChange(key, key, e.target.value)
+                }
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg"
+                placeholder="Value"
+              />
+              <button
+                onClick={() => removeSpecification(key)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/*  Why chose product page  */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-sm font-semibold text-slate-700">
+            Why Choose This Product
+          </label>
+          <button
+            onClick={addWhyChoseUs}
+            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add</span>
+          </button>
+        </div>
+        <div className="space-y-3">
+          {catalogData.generatedContent.benefits.map((feature, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <GripVertical className="w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={feature}
+                onChange={e => handlewhychoseUs(index, e.target.value)}
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter feature..."
+              />
+              <button
+                onClick={() => removeWhyChoseUs(index)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-3">
+          Price
+        </label>
+        <input
+          type="text"
+          value={catalogData.product.price}
+          onChange={e => onContentChange('price', e.target.value)}
+          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
       </div>
     </div>
   );
@@ -170,7 +318,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   const renderLayoutPanel = () => (
     <div className="p-6 space-y-6">
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-3">Image Order</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-3">Image Order & Editing</label>
         <div className="space-y-3">
           {catalogData.images.map((image, index) => (
             <div key={image.id} className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl">
@@ -184,8 +332,63 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                 <div className="font-medium text-sm">Image {index + 1}</div>
                 <div className="text-xs text-slate-600">{image.alt}</div>
               </div>
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                id={`replace-image-${index}`}
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const newImages = [...catalogData.images];
+                    newImages[index] = {
+                      ...newImages[index],
+                      url: URL.createObjectURL(file),
+                      alt: file.name
+                    };
+                    onImageReorder(newImages);
+                  }
+                }}
+              />
+              <label htmlFor={`replace-image-${index}`} className="text-blue-500 hover:text-blue-700 cursor-pointer text-xs mr-2">Replace</label>
+              <button
+                className="text-red-500 hover:text-red-700 text-xs"
+                onClick={() => {
+                  const newImages = catalogData.images.filter((_, i) => i !== index);
+                  onImageReorder(newImages);
+                }}
+              >Remove</button>
             </div>
           ))}
+          {/* Add Image Button */}
+          {catalogData.images.length < 15 && (
+            <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl">
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="add-image-input"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const newImages = [
+                      ...catalogData.images,
+                      {
+                        id: `${Date.now()}-${file.name}`,
+                        url: URL.createObjectURL(file),
+                        alt: file.name,
+                        position: catalogData.images.length
+                      }
+                    ];
+                    onImageReorder(newImages);
+                  }
+                }}
+              />
+              <label htmlFor="add-image-input" className="text-blue-600 hover:text-blue-800 cursor-pointer text-sm font-medium flex items-center">
+                <span className="mr-2">+</span> Add Image
+              </label>
+            </div>
+          )}
         </div>
       </div>
 

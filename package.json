@@ -13,14 +13,22 @@
   },
   "dependencies": {
     "@google/genai": "^1.5.1",
+    "@react-pdf/renderer": "^4.3.0",
     "axios": "^1.9.0",
     "cheerio": "^1.1.0",
     "compression": "^1.7.4",
+    "html2pdf.js": "^0.10.3",
     "lucide-react": "^0.344.0",
     "openai": "^5.5.1",
     "puppeteer-core": "^24.10.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-device-detect": "^2.2.3",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dnd-touch-backend": "^16.0.1",
+    "react-dom": "^18.3.1",
+    "react-to-pdf": "^2.0.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

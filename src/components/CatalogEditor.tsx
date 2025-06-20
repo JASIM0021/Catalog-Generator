@@ -3,6 +3,7 @@ import { ArrowLeft, Eye, Settings, Palette, Type, Layout, Save } from 'lucide-re
 import { CatalogData } from '../types';
 import CatalogPreview from './CatalogPreview';
 import EditorPanel from './EditorPanel';
+import { Margin, usePDF } from 'react-to-pdf';
 
 interface CatalogEditorProps {
   catalogData: CatalogData;
@@ -14,10 +15,17 @@ const CatalogEditor: React.FC<CatalogEditorProps> = ({ catalogData, onComplete, 
   const [editedData, setEditedData] = useState<CatalogData>(catalogData);
   const [activePanel, setActivePanel] = useState<'content' | 'design' | 'layout'>('content');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-
+   const { toPDF, targetRef } = usePDF({
+     filename: 'use-pdf.pdf',
+     page: { margin: Margin.MEDIUM},
+   });
   const handleContentChange = (field: string, value: any) => {
     setEditedData(prev => ({
       ...prev,
+      product: {
+        ...prev.product,
+          [field]: value
+      },
       generatedContent: {
         ...prev.generatedContent,
         [field]: value
@@ -67,18 +75,20 @@ const CatalogEditor: React.FC<CatalogEditorProps> = ({ catalogData, onComplete, 
                 <span>Back</span>
               </button>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Catalog Editor</h2>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Catalog Editor
+                </h2>
                 <p className="text-slate-600">Customize your product catalog</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-1 bg-slate-100 rounded-xl p-1">
                 <button
                   onClick={() => setPreviewMode('desktop')}
                   className={`px-3 py-2 text-sm rounded-lg transition-colors duration-200 ${
-                    previewMode === 'desktop' 
-                      ? 'bg-white text-slate-900 shadow-sm' 
+                    previewMode === 'desktop'
+                      ? 'bg-white text-slate-900 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -87,15 +97,15 @@ const CatalogEditor: React.FC<CatalogEditorProps> = ({ catalogData, onComplete, 
                 <button
                   onClick={() => setPreviewMode('mobile')}
                   className={`px-3 py-2 text-sm rounded-lg transition-colors duration-200 ${
-                    previewMode === 'mobile' 
-                      ? 'bg-white text-slate-900 shadow-sm' 
+                    previewMode === 'mobile'
+                      ? 'bg-white text-slate-900 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Mobile
                 </button>
               </div>
-              
+
               <button
                 onClick={handleSave}
                 className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
@@ -144,12 +154,9 @@ const CatalogEditor: React.FC<CatalogEditorProps> = ({ catalogData, onComplete, 
           </div>
 
           {/* Preview Area */}
-          <div className="flex-1 bg-slate-50 p-6">
+          <div className="flex-1 bg-slate-50 p-6" ref={targetRef}>
             <div className="h-full">
-              <CatalogPreview
-                catalogData={editedData}
-                mode={previewMode}
-              />
+              <CatalogPreview catalogData={editedData} mode={previewMode} />
             </div>
           </div>
         </div>

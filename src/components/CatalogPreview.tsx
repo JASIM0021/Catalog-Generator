@@ -36,11 +36,44 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ catalogData, mode }) =>
   const colorClasses = getColorClasses();
   const [gradientFrom, gradientTo, textColor, borderColor, bgColor] = colorClasses.split(' ');
 
+  const getThemeClasses = () => {
+    switch (catalogData.layout.theme) {
+      case 'classic':
+        return {
+          container: 'bg-[#f9f6f1] border border-[#e2c799] shadow-none',
+          header: 'bg-gradient-to-r from-yellow-800 to-yellow-600 text-white',
+          font: 'font-serif',
+          section: 'bg-white border border-yellow-200',
+          button: 'bg-yellow-700 hover:bg-yellow-800',
+          price: 'text-yellow-900',
+        };
+      case 'minimal':
+        return {
+          container: 'bg-white border border-slate-200 shadow-none',
+          header: 'bg-slate-100 text-slate-900',
+          font: 'font-sans',
+          section: 'bg-white border border-slate-100',
+          button: 'bg-slate-900 hover:bg-slate-700',
+          price: 'text-slate-900',
+        };
+      default: // modern
+        return {
+          container: 'bg-white rounded-2xl shadow-lg',
+          header: `bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white`,
+          font: getFontClass(),
+          section: `${bgColor} border-2 ${borderColor}`,
+          button: `bg-gradient-to-r ${gradientFrom} ${gradientTo}`,
+          price: 'text-slate-900',
+        };
+    }
+  };
+  const theme = getThemeClasses();
+
   return (
-    <div className={`h-full bg-white rounded-2xl shadow-lg overflow-hidden ${mode === 'mobile' ? 'max-w-sm mx-auto' : ''}`}>
-      <div className={`h-full overflow-y-auto ${getFontClass()}`}>
+    <div className={`h-full overflow-hidden ${theme.container} ${mode === 'mobile' ? 'max-w-sm mx-auto' : ''}`}>
+      <div className={`h-full overflow-y-auto ${theme.font}`}>
         {/* Header */}
-        <div className={`bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white p-8`}>
+        <div className={`${theme.header} p-8`}>
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-2">{catalogData.generatedContent.title}</h1>
             <div className="flex items-center justify-center space-x-1">
@@ -68,13 +101,13 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ catalogData, mode }) =>
           </div>
 
           {/* Description */}
-          <div>
+          <div className={`${theme.section} p-6 rounded-2xl`}>
             <h2 className="text-xl font-bold text-slate-900 mb-4">Product Overview</h2>
             <p className="text-slate-700 leading-relaxed">{catalogData.generatedContent.description}</p>
           </div>
 
           {/* Key Features */}
-          <div>
+          <div className={`${theme.section} p-6 rounded-2xl`}>
             <h2 className="text-xl font-bold text-slate-900 mb-4">Key Features</h2>
             <div className="grid gap-3">
               {catalogData.generatedContent.features.map((feature, index) => (
@@ -89,7 +122,7 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ catalogData, mode }) =>
           </div>
 
           {/* Specifications */}
-          <div>
+          <div className={`${theme.section} p-6 rounded-2xl`}>
             <h2 className="text-xl font-bold text-slate-900 mb-4">Specifications</h2>
             <div className={`border-2 ${borderColor} rounded-2xl overflow-hidden`}>
               {Object.entries(catalogData.generatedContent.specifications).map(([key, value], index) => (
@@ -103,7 +136,7 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ catalogData, mode }) =>
 
           {/* Benefits */}
           {catalogData.generatedContent.benefits && (
-            <div>
+            <div className={`${theme.section} p-6 rounded-2xl`}>
               <h2 className="text-xl font-bold text-slate-900 mb-4">Why Choose This Product</h2>
               <div className="grid gap-4">
                 {catalogData.generatedContent.benefits.map((benefit, index) => (
@@ -116,12 +149,12 @@ const CatalogPreview: React.FC<CatalogPreviewProps> = ({ catalogData, mode }) =>
           )}
 
           {/* Pricing & CTA */}
-          <div className={`p-6 ${bgColor} rounded-2xl border-2 ${borderColor} text-center`}>
+          <div className={`p-6 rounded-2xl text-center ${theme.section}`}>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-slate-900">{catalogData.product.price || '$199.99'}</span>
-              <span className="text-slate-600 ml-2">Free shipping included</span>
+              <span className={`text-3xl font-bold ${theme.price}`}>{catalogData.product.price || '$199.99'}</span>
+              {/* <span className="text-slate-600 ml-2">Free shipping included</span> */}
             </div>
-            <button className={`w-full bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white py-4 rounded-2xl font-semibold flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity duration-200`}>
+            <button className={`w-full py-4 rounded-2xl font-semibold flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity duration-200 ${theme.button}`}>
               <ShoppingCart className="w-5 h-5" />
               <span>Add to Cart</span>
             </button>

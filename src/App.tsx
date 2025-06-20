@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Sparkles, Zap, FileText, Download } from 'lucide-react';
 import ProductInput from './components/ProductInput';
 import ContentGeneration from './components/ContentGeneration';
@@ -6,19 +6,21 @@ import CatalogEditor from './components/CatalogEditor';
 import ExportCatalog from './components/ExportCatalog';
 import Header from './components/Header';
 import ProgressBar from './components/ProgressBar';
-import { ProductData, CatalogData } from './types';
+import { ProductData, CatalogData, mockCatalogData } from './types';
+ import html2pdf from 'html2pdf.js';
+ // @ts-ignore
 
-type Step = 'input' | 'generation' | 'editor' | 'export';
+
+type Step =  'editor' | 'export';
 
 function App() {
-  const [currentStep, setCurrentStep] = useState<Step>('input');
+  const [currentStep, setCurrentStep] = useState<Step>('editor');
   const [productData, setProductData] = useState<ProductData | null>(null);
   const [catalogData, setCatalogData] = useState<CatalogData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const steps = [
-    { id: 'input', label: 'Product Input', icon: Zap },
-    { id: 'generation', label: 'AI Generation', icon: Sparkles },
+
     { id: 'editor', label: 'Catalog Editor', icon: FileText },
     { id: 'export', label: 'Export', icon: Download }
   ];
@@ -37,8 +39,8 @@ function App() {
     setIsProcessing(false);
   }, []);
 
-  const handleGenerationComplete = useCallback((data: CatalogData) => {
-    setCatalogData(data);
+  const handleGenerationComplete = useCallback((data: any) => {
+    setCatalogData(mockCatalogData);
     setCurrentStep('editor');
   }, []);
 
@@ -58,6 +60,10 @@ function App() {
     setIsProcessing(false);
   }, []);
 
+  useEffect(() => {
+    handleGenerationComplete('')
+
+  },[])
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header />
@@ -74,25 +80,15 @@ function App() {
 
         {/* Main Content */}
         <div className="max-w-6xl mx-auto">
-          {currentStep === 'input' && (
-            <ProductInput 
-              onSubmit={handleProductSubmit}
-              isProcessing={isProcessing}
-            />
-          )}
+       
 
-          {currentStep === 'generation' && productData && (
-            <ContentGeneration 
-              productData={productData}
-              onComplete={handleGenerationComplete}
-            />
-          )}
+         
 
           {currentStep === 'editor' && catalogData && (
             <CatalogEditor 
               catalogData={catalogData}
               onComplete={handleEditingComplete}
-              onBack={() => setCurrentStep('generation')}
+              onBack={() => { }}
             />
           )}
 
@@ -104,6 +100,7 @@ function App() {
             />
           )}
         </div>
+        
       </main>
     </div>
   );
